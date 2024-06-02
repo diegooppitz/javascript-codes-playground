@@ -1,18 +1,18 @@
-import React from "react";
+import React from 'react';
 
 export type CalendarDataTypes = {
   week: WeekDay[];
-  firstDay: string;
-  lastDay: string;
-  currentYear: string | Number;
+  firstDay: Date;
+  lastDay: Date;
+  currentYear: number;
   today: Date;
   formattedRange?: string;
 };
 
 export type CalendarNavPropsTypes = {
   calendarData: CalendarDataTypes | null;
-  setWeekToGo: React.Dispatch;
-  weekToGo: any;
+  setWeekToGo: React.Dispatch<React.SetStateAction<number>>;
+  weekToGo: number;
 };
 
 export type SuggestedDate = {
@@ -21,20 +21,21 @@ export type SuggestedDate = {
   endTime: string;
 };
 
-type EventModalProps = {
+export type EventModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  suggestedDate: SuggestedDate;
+  eventModalData: EventDataTypes;
 };
 
 export type EventDataTypes = {
-  id: number | null,
-  title: string;
-  description: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  allDay: boolean;
+  selectedDate?: string;
+  id?: string;
+  title?: string;
+  description?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  allDay?: boolean;
 };
 
 export type WeekDay = {

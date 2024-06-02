@@ -91,7 +91,7 @@ export const getNextRoundedTime = (
 };
 
 export const mockEventData = {
-  id: null,
+  id: '',
   title: '',
   description: '',
   date: '',

@@ -6,8 +6,9 @@ import { mockEventData } from '@/utils/dates/get_infos';
 const EventModal: React.FC<EventModalProps> = ({
   isOpen,
   onClose,
-  suggestedDate,
+  eventModalData,
 }) => {
+  const [eventIsNew, setEventIsNew] = useState(false);
   const [formData, setFormData] = useState<EventDataTypes>({
     ...mockEventData,
   });
@@ -16,7 +17,6 @@ const EventModal: React.FC<EventModalProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type, checked } = e.target;
-
     const updatedValue = type === 'checkbox' ? checked : value;
 
     setFormData((prevState) => ({
@@ -37,20 +37,29 @@ const EventModal: React.FC<EventModalProps> = ({
     return updates;
   };
 
-  const updateFormData = async () => {
-    setFormData((prevState) => ({
-      ...prevState,
-      date: suggestedDate.selectedDate,
-      startTime: suggestedDate.startTime,
-      endTime: suggestedDate.endTime,
-    }));
+  const updateFormData = () => {
+    if (eventModalData?.title) {
+      setFormData(eventModalData);
+      setEventIsNew(false);
+    } else {
+      setEventIsNew(true);
+      setFormData((prevState) => ({
+        ...prevState,
+        date: eventModalData.selectedDate,
+        startTime: eventModalData.startTime,
+        endTime: eventModalData.endTime,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    eventIsNew ? createEvent() : updateEvent();
+  };
 
+  const createEvent = async () => {
     try {
-      await fetch('/api/calendar', {
+      const response = await fetch('/api/calendar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,17 +67,36 @@ const EventModal: React.FC<EventModalProps> = ({
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+      console.log('data', data);
       window.location.reload();
+      onClose();
     } catch (error) {
       console.error('request error:', error);
     }
+  };
 
-    onClose();
+  const updateEvent = async () => {
+    const eventId = eventModalData?.id;
+    try {
+      await fetch(`/api/calendar?id=${eventId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      window.location.reload();
+      onClose();
+    } catch (error) {
+      console.error('request error:', error);
+    }
   };
 
   useEffect(() => {
     updateFormData();
-  }, [suggestedDate]);
+  }, [eventModalData]);
 
   if (!isOpen) return null;
 
@@ -77,7 +105,7 @@ const EventModal: React.FC<EventModalProps> = ({
       <div className="modal">
         <div className="modal-header">
           <span className="close" onClick={onClose}></span>
-          <h2>New Event</h2>
+          <h2>{eventIsNew ? 'New Event' : 'Edit Event'}</h2>
         </div>
         <div className="modal-body">
           <form onSubmit={handleSubmit}>
@@ -89,7 +117,6 @@ const EventModal: React.FC<EventModalProps> = ({
               value={formData.title}
               onChange={handleChange}
             />
-
             <div className="date-configs">
               <div className="inputs-date-config">
                 <input
@@ -99,7 +126,6 @@ const EventModal: React.FC<EventModalProps> = ({
                   onChange={handleChange}
                   disabled={formData.allDay}
                 />
-
                 <div className="input-all-day">
                   <input
                     type="checkbox"
@@ -111,7 +137,6 @@ const EventModal: React.FC<EventModalProps> = ({
                   <label htmlFor="allDay">All Day</label>
                 </div>
               </div>
-
               <div className="inputs-date-config">
                 <input
                   type="time"
@@ -129,7 +154,6 @@ const EventModal: React.FC<EventModalProps> = ({
                 />
               </div>
             </div>
-
             <label htmlFor="eventDescription">Event Description:</label>
             <textarea
               id="eventDescription"
@@ -137,9 +161,8 @@ const EventModal: React.FC<EventModalProps> = ({
               value={formData.description}
               onChange={handleChange}
             ></textarea>
-
             <div className="modal-footer">
-              <button className="SubmitButton">Create</button>
+              <button className="SubmitButton">Submit</button>
               <button className="cancelButton" onClick={onClose}>
                 Cancel
               </button>
